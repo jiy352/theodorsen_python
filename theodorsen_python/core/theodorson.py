@@ -17,11 +17,12 @@ def theodorson_function(k):
         (k**3 + 2.48148*k**2 + 0.93453*k + 0.08932)
     return F, G
 
-def Lift(rho, V, a, b, alpha, alpha_dot, alpha_ddot, k, h_dot=0, h_ddot=0):
+def Lift(rho, V, a, b, alpha_max, omg, n_period, h_dot=0, h_ddot=0):
     '''
     The lift coefficient is defined as:
         C_L = 2*F(K)*sin(alpha) + 2*G(K)*cos(alpha)
     '''
+    k, alpha, alpha_dot, alpha_ddot = generate_kinemtics(a, b, V, alpha_max, omg, n_period)
     F, G = theodorson_function(k)
     print(F, G)
     L_NC = np.pi*rho*b**2*(h_ddot + V*alpha_dot - b*a*alpha_ddot)
@@ -45,51 +46,68 @@ if __name__ == '__main__':
     # test generate_kinematics
     a = -1/2
     b = 1
-    V = 1
+    V = np.array([1, 1/0.7, 1/0.4, 1/0.1])
     omg = 1
     alpha_max = np.deg2rad(5)
     n_period = 2
     t = np.linspace(0, n_period*2*np.pi/omg, 100)
+
+    # test Lift
+    rho = 1.0
+    plt.figure()
+    plt.rcParams['font.size'] = 12
+    plt.rcParams['axes.labelsize'] = 14
+    plt.rcParams['axes.titlesize'] = 16
+    plt.rcParams['lines.linewidth'] = 2
+    plt.figure(figsize=(10, 6))  # Adjust the figure size
+
+    for i in range(len(V)):
+        L_NC, L_C, CL = Lift(rho, V[i], a, b, alpha_max, omg, n_period)
+        # plt.figure()
+        # plt.plot(t, L_C.real, label='L_C_real')
+        # plt.plot(t, L_NC.real+L_C.real, label='L_C_real')
+        # # plt.plot(t, L_C.imag, label='L_C_imag')
+        # plt.xlabel('t')
+        # plt.ylabel('L_C')
+        plt.plot(t, CL.real, label='Cl')
+        # plt.plot(t, CL_k1.real/100, label='CL')
+        plt.xlabel('time (s)')
+        plt.ylabel('Cl')
+        plt.grid(True)
+        plt.legend(['k=1','k=0.7', 'k=0.4','k=0.1'])
+        plt.savefig('CL.png', dpi=400)
+
+    plt.show()
+    # exit()
+
     k, alpha, alpha_dot, alpha_ddot = generate_kinemtics(a, b, V, alpha_max, omg, n_period)
 
     # plot alpha, alpha_dot, alpha_ddot
     plt.figure()
+    plt.rcParams['font.size'] = 12
+    plt.rcParams['axes.labelsize'] = 14
+    plt.rcParams['axes.titlesize'] = 16
+    plt.rcParams['lines.linewidth'] = 2
+    plt.figure(figsize=(10, 6))  # Adjust the figure size
+
     plt.plot(t, np.rad2deg(alpha), label='alpha')
     plt.plot(t, np.rad2deg(alpha_dot.real), label='alpha_dot')
     plt.plot(t, np.rad2deg(alpha_ddot.real), label='alpha_ddot')
     plt.legend(['alpha', 'alpha_dot', 'alpha_ddot'])
-
+    plt.grid(True)
+    plt.xlabel('Time')
+    plt.ylabel('Degrees')
+    plt.title('Angle and Derivatives vs Time')
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig('alpha.png', dpi=400)
 
     
 
     # plt.plot(t, np.rad2deg(alpha.imag), label='imag')
-    plt.xlabel('t')
-    plt.ylabel('alpha')
+    # plt.xlabel('t')
+    # plt.ylabel('alpha')
     # plt.show()
-
-
-    # test Lift
-    rho = 1.0
-    L_NC, L_C, CL = Lift(rho, V, a, b, alpha, alpha_dot, alpha_ddot, k)
-    L_NC, L_C, CL_k1 = Lift(rho, V/10, a, b, alpha, alpha_dot, alpha_ddot, k)
-    plt.figure()
-    plt.plot(t, L_C.real, label='L_C_real')
-    plt.plot(t, L_NC.real+L_C.real, label='L_C_real')
-    # plt.plot(t, L_C.imag, label='L_C_imag')
-    plt.xlabel('t')
-    plt.ylabel('L_C')
-
-
-    plt.figure()
-    plt.plot(t, CL.real, label='CL')
-    plt.plot(t, CL_k1.real/100, label='CL')
-    plt.xlabel('t')
-    plt.ylabel('CL')
-    plt.legend(['CL', 'CL_k1'])
-
-    plt.show()
-    exit()
-
 
 
     # Plot the Theodorson function
