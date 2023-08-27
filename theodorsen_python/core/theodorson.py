@@ -26,7 +26,13 @@ def Lift(rho, V, a, b, alpha, alpha_dot, alpha_ddot, k, h_dot=0, h_ddot=0):
     print(F, G)
     L_NC = np.pi*rho*b**2*(h_ddot + V*alpha_dot - b*a*alpha_ddot)
     L_C = 2*np.pi*rho*V*b*(h_dot + alpha*V + b*alpha_dot*(1/2-a))* (F+G*1j)
-    return L_C
+
+    print('coefficients on alpha, alpha_dot, alpha_ddot:', 
+            V**2*F*2*np.pi*b,
+            np.pi*b**2*V+2*np.pi*b**2*V*F*b*(1/2-a),
+            -np.pi*b**2*a*b)
+    CL = (L_NC + L_C)/(1/2*rho*V**2*b)
+    return L_NC, L_C, CL
 
 def generate_kinemtics(a, b, V, alpha_max, omg, n_period):
     k = omg * b / V
@@ -39,7 +45,7 @@ if __name__ == '__main__':
     # test generate_kinematics
     a = -1/2
     b = 1
-    V = 10
+    V = 1
     omg = 1
     alpha_max = np.deg2rad(5)
     n_period = 2
@@ -64,12 +70,23 @@ if __name__ == '__main__':
 
     # test Lift
     rho = 1.0
-    L_C = Lift(rho, V, a, b, alpha, alpha_dot, alpha_ddot, k)
+    L_NC, L_C, CL = Lift(rho, V, a, b, alpha, alpha_dot, alpha_ddot, k)
+    L_NC, L_C, CL_k1 = Lift(rho, V/10, a, b, alpha, alpha_dot, alpha_ddot, k)
     plt.figure()
     plt.plot(t, L_C.real, label='L_C_real')
-    plt.plot(t, L_C.imag, label='L_C_imag')
+    plt.plot(t, L_NC.real+L_C.real, label='L_C_real')
+    # plt.plot(t, L_C.imag, label='L_C_imag')
     plt.xlabel('t')
     plt.ylabel('L_C')
+
+
+    plt.figure()
+    plt.plot(t, CL.real, label='CL')
+    plt.plot(t, CL_k1.real/100, label='CL')
+    plt.xlabel('t')
+    plt.ylabel('CL')
+    plt.legend(['CL', 'CL_k1'])
+
     plt.show()
     exit()
 
