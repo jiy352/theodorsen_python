@@ -25,30 +25,42 @@ def Lift(rho, V, a, b, alpha_max, omg, n_period, h_dot=0, h_ddot=0):
     k, alpha, alpha_dot, alpha_ddot = generate_kinemtics(a, b, V, alpha_max, omg, n_period)
     F, G = theodorson_function(k)
     print(F, G)
-    L_NC = np.pi*rho*b**2*(h_ddot + V*alpha_dot - b*a*alpha_ddot)
-    L_C = 2*np.pi*rho*V*b*(h_dot + alpha*V + b*alpha_dot*(1/2-a))* (F+G*1j)
+    L_NC = np.pi*rho*b**2*(h_ddot + V*alpha_dot - b*a*alpha_ddot) 
+    L_C = (2*np.pi*rho*V*b*(h_dot + alpha*V + b*alpha_dot*(1/2-a))* (F+G*1j))
 
     print('coefficients on alpha, alpha_dot, alpha_ddot:', 
             V**2*F*2*np.pi*b,
             np.pi*b**2*V+2*np.pi*b**2*V*F*b*(1/2-a),
             -np.pi*b**2*a*b)
-    CL = (L_NC + L_C)/(1/2*rho*V**2*b)
+    CL = (L_NC + L_C)/(1/2*rho*V**2*b*2)
+    # CL = np.pi*b*(alpha_dot/V + h_ddot/(V**2) - b*a*alpha_ddot/(V**2)) + \
+    #         2*np.pi*(F+G*1j)*(h_dot/V + alpha + b*alpha_dot*(1/2-a)/V)
     return L_NC, L_C, CL
 
 def generate_kinemtics(a, b, V, alpha_max, omg, n_period):
     k = omg * b / V
     alpha = alpha_max * np.exp(1j*omg*t).real
-    alpha_dot = alpha_max * np.exp(1j*omg*t) * 1j * omg
-    alpha_ddot = alpha_max * np.exp(1j*omg*t) * (1j * omg)**2
+    alpha_dot = (alpha_max * np.exp(1j*omg*t) * 1j * omg).real
+    alpha_ddot = (alpha_max * np.exp(1j*omg*t) * (1j * omg)**2).real
+
+    # alpha = alpha_max * np.cos(omg*t)+ alpha_max
+    # alpha_dot = -omg * alpha_max * np.sin(omg*t)
+    # alpha_ddot = -omg**2 * alpha_max * np.cos(omg*t)
+
+    # alpha = alpha_max * np.sin(omg*t)
+    # alpha_dot = omg * alpha_max * np.cos(omg*t)
+    # alpha_ddot = -omg**2 * alpha_max * np.sin(omg*t)
+
     return k, alpha, alpha_dot, alpha_ddot
 
 if __name__ == '__main__':
+
     # test generate_kinematics
     a = -1/2
     b = 1
-    V = np.array([1, 1/0.7, 1/0.4, 1/0.1])
+    V = np.array([1/3, 1/1, 1/0.6, 1/0.2])
     omg = 1
-    alpha_max = np.deg2rad(5)
+    alpha_max = np.deg2rad(1)
     n_period = 2
     t = np.linspace(0, n_period*2*np.pi/omg, 100)
 
@@ -60,6 +72,7 @@ if __name__ == '__main__':
     plt.rcParams['axes.titlesize'] = 16
     plt.rcParams['lines.linewidth'] = 2
     plt.figure(figsize=(10, 6))  # Adjust the figure size
+    lgd = ['k=3','k=1', 'k=0.6','k=0.2']
 
     for i in range(len(V)):
         L_NC, L_C, CL = Lift(rho, V[i], a, b, alpha_max, omg, n_period)
@@ -69,19 +82,27 @@ if __name__ == '__main__':
         # # plt.plot(t, L_C.imag, label='L_C_imag')
         # plt.xlabel('t')
         # plt.ylabel('L_C')
-        plt.plot(t, CL.real, label='Cl')
+        T = 2*np.pi/omg
+        alpha = alpha_max * np.exp(1j*omg*t).real 
+        plt.figure()
+        plt.plot(np.rad2deg(alpha), CL.real, label='Cl')
+        # plt.plot(t/T, CL.real, label='Cl')
         # plt.plot(t, CL_k1.real/100, label='CL')
-        plt.xlabel('time (s)')
+        plt.xlabel('t/T ')
+        plt.xlabel('alpha ')
         plt.ylabel('Cl')
         plt.grid(True)
-        plt.legend(['k=1','k=0.7', 'k=0.4','k=0.1'])
-        plt.savefig('CL.png', dpi=400)
+        plt.legend([lgd[i]])
+        plt.xlim( - 1,  1)
+        plt.ylim(-0.1, 0.1)
+        plt.savefig('CL'+str(i)+'.png', dpi=400, transparent=True)
+    # plt.ylim(-1.7, 1.7)
 
-    plt.show()
+    # plt.show()
     # exit()
 
     k, alpha, alpha_dot, alpha_ddot = generate_kinemtics(a, b, V, alpha_max, omg, n_period)
-
+    
     # plot alpha, alpha_dot, alpha_ddot
     plt.figure()
     plt.rcParams['font.size'] = 12
@@ -111,7 +132,7 @@ if __name__ == '__main__':
 
 
     # Plot the Theodorson function
-
+    exit()
     k = np.linspace(0.0, 1000, 100000)
     F, G = theodorson_function(k)
 
@@ -134,8 +155,8 @@ if __name__ == '__main__':
                     )
 
     # Adjust the plot limits to make annotations fit within the plot area
-    plt.xlim(min(F) - 0.1, max(F) + 0.1)
-    plt.ylim(min(G) - 0.1, max(G) + 0.1)
+    plt.xlim( - 1,  1)
+    plt.ylim(-0.1, 0.1)
 
     plt.xlabel('F(k)')
     plt.ylabel('G(k)')
