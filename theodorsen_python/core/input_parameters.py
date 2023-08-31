@@ -41,8 +41,8 @@ P = PARAMETERS = {
 # Fluid Body Constants                                                        #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 , 'V0':                 -0.05
-, 'THETA_MAX':          0.00
-, 'HEAVE_MAX':          0.025
+, 'THETA_MAX':          np.deg2rad(5)
+, 'HEAVE_MAX':          0.0
 , 'F':                  0.52
 , 'DC':                 0.5
 , 'SIG_WEIGHT':         [0., 1., 0., 0.] # [sine, square, triangle, sawtooth]

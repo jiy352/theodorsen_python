@@ -1,29 +1,42 @@
 import numpy as np
 import matplotlib as mpl
 mpl.rcParams.update(mpl.rcParamsDefault)
+import scipy.special as scsp
 
 import matplotlib.pyplot as plt
 
 def theodorson_function(k):
-    '''
-    The Theodorson function C(K) is defined as:
-        F(K) = Re(C(K))
-        G(K) = Im(C(K))
-    '''
-    F = (0.5005*k**3 + 0.51261*k**2 + 0.21040*k + 0.021573)/ \
-        (k**3 + 1.03538*k**2 + 0.25124*k + 0.02151)
+	'''Returns Theodorsen function at a reduced frequency k'''
 
-    G = - (0.00015*k**3 + 0.12240*k**2 + 0.32721*k + 0.001990)/ \
-        (k**3 + 2.48148*k**2 + 0.93453*k + 0.08932)
-    return F, G
+	H1=scsp.hankel2(1,k)
+	H0=scsp.hankel2(0,k)
 
-def Lift(rho, V, a, b, alpha_max, omg, n_period, h_dot=0, h_ddot=0):
+	C=H1/(H1+1.j*H0)
+
+	return C.real, C.imag
+
+# def theodorson_function(k):
+#     '''
+#     The Theodorson function C(K) is defined as:
+#         F(K) = Re(C(K))
+#         G(K) = Im(C(K))
+#     '''
+#     F = (0.5005*k**3 + 0.51261*k**2 + 0.21040*k + 0.021573)/ \
+#         (k**3 + 1.03538*k**2 + 0.25124*k + 0.02151)
+
+#     G = - (0.00015*k**3 + 0.12240*k**2 + 0.32721*k + 0.001990)/ \
+#         (k**3 + 2.48148*k**2 + 0.93453*k + 0.08932)
+#     return F, G
+
+def Lift(rho, V, a, b, alpha_max, omg, n_period, t, h_dot=0, h_ddot=0):
     '''
     The lift coefficient is defined as:
         C_L = 2*F(K)*sin(alpha) + 2*G(K)*cos(alpha)
     '''
-    k, alpha, alpha_dot, alpha_ddot = generate_kinemtics(a, b, V, alpha_max, omg, n_period)
+    k, alpha, alpha_dot, alpha_ddot = generate_kinemtics(a, b, V, alpha_max, omg, n_period,t)
     F, G = theodorson_function(k)
+    if abs(G)<1e-4:
+        G = 0
     print(F, G)
     L_NC = np.pi*rho*b**2*(h_ddot + V*alpha_dot - b*a*alpha_ddot) 
     L_C = (2*np.pi*rho*V*b*(h_dot + alpha*V + b*alpha_dot*(1/2-a))* (F+G*1j))
@@ -32,16 +45,21 @@ def Lift(rho, V, a, b, alpha_max, omg, n_period, h_dot=0, h_ddot=0):
             V**2*F*2*np.pi*b,
             np.pi*b**2*V+2*np.pi*b**2*V*F*b*(1/2-a),
             -np.pi*b**2*a*b)
-    CL = (L_NC + L_C)/(1/2*rho*V**2*b*2)
-    # CL = np.pi*b*(alpha_dot/V + h_ddot/(V**2) - b*a*alpha_ddot/(V**2)) + \
-    #         2*np.pi*(F+G*1j)*(h_dot/V + alpha + b*alpha_dot*(1/2-a)/V)
+    # CL = (L_NC + L_C)/(1/2*rho*V**2*b*2)
+    CL = np.pi*b*(alpha_dot/V + h_ddot/(V**2) - b*a*alpha_ddot/(V**2)) + \
+            2*np.pi*(F+G*1j)*(h_dot/V + alpha + b*alpha_dot*(1/2-a)/V)
+
+    # CL = (np.pi*2*(F+G*1j) + 1.j*np.pi*k)*alpha 
+    # CL = (CL.real**2 + CL.imag**2)**0.5
     return L_NC, L_C, CL
 
-def generate_kinemtics(a, b, V, alpha_max, omg, n_period):
+def generate_kinemtics(a, b, V, alpha_max, omg, n_period, t):
     k = omg * b / V
-    alpha = alpha_max * np.exp(1j*omg*t).real
-    alpha_dot = (alpha_max * np.exp(1j*omg*t) * 1j * omg).real
-    alpha_ddot = (alpha_max * np.exp(1j*omg*t) * (1j * omg)**2).real
+    print('k:--------------', k)
+    print('omg:--------------', omg)
+    # alpha = alpha_max * np.exp(1j*omg*t).real
+    # alpha_dot = (alpha_max * np.exp(1j*omg*t) * 1j * omg).real
+    # alpha_ddot = (alpha_max * np.exp(1j*omg*t) * (1j * omg)**2).real
 
     # alpha = alpha_max * np.cos(omg*t)+ alpha_max
     # alpha_dot = -omg * alpha_max * np.sin(omg*t)
@@ -50,6 +68,13 @@ def generate_kinemtics(a, b, V, alpha_max, omg, n_period):
     # alpha = alpha_max * np.sin(omg*t)
     # alpha_dot = omg * alpha_max * np.cos(omg*t)
     # alpha_ddot = -omg**2 * alpha_max * np.sin(omg*t)
+
+    # alpha_max = np.deg2rad(5)
+
+    alpha = alpha_max * np.cos(omg*t)
+    alpha_dot = -(alpha_max * np.sin(omg*t)* omg)
+    alpha_ddot = -(alpha_max * np.cos(omg*t)* omg**2)
+    # print('alpha:--------------', alpha)
 
     return k, alpha, alpha_dot, alpha_ddot
 
@@ -75,7 +100,7 @@ if __name__ == '__main__':
     lgd = ['k=3','k=1', 'k=0.6','k=0.2']
 
     for i in range(len(V)):
-        L_NC, L_C, CL = Lift(rho, V[i], a, b, alpha_max, omg, n_period)
+        L_NC, L_C, CL = Lift(rho, V[i], a, b, alpha_max, omg, n_period,t)
         # plt.figure()
         # plt.plot(t, L_C.real, label='L_C_real')
         # plt.plot(t, L_NC.real+L_C.real, label='L_C_real')

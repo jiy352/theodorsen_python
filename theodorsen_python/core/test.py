@@ -7,7 +7,8 @@ tau = np.linspace(0, 5, P['N_STEP']*P['N_CYC']+1)
 
 b = 0.5 * P['C']
 a = -1.0
-w = 2. * np.pi * P['F']
+# w = 2. * np.pi * P['F']
+w = 0.1
 t = np.asarray(P['T'])
 RHO = P['RHO']
 U = np.absolute(P['V0'])
@@ -25,6 +26,7 @@ G = -(y1(k)*y0(k) + j1(k)*j0(k)) / ((j1(k)+y0(k))**2 + (y1(k)-j0(k))**2)
 L = -RHO * b**2 * (U * np.pi * THETA_MAX * w * np.cos(w * t + PHI) - np.pi * HEAVE_MAX * w**2 * np.sin(w * t) + np.pi * b * a * THETA_MAX * w**2 * np.sin(w * t + PHI)) - 2. * np.pi * RHO * U * b * F * (U * THETA_MAX * np.sin(w * t + PHI) + HEAVE_MAX * w * np.cos(w * t) + b * (0.5 - a) * THETA_MAX * w * np.cos(w * t + PHI)) - 2. * np.pi * RHO * U * b * G * (U * THETA_MAX * np.cos(w * t + PHI) - HEAVE_MAX * w * np.sin(w * t) - b * (0.5 - a) * THETA_MAX * w * np.sin(w * t + PHI))
 
 Cl = np.real(L) / (0.5 * P['RHO'] * np.absolute(P['V0'])**2 * P['C'])
+plt.plot(THETA_MAX * np.sin(w * t + PHI)/np.pi*180, Cl)
 exit()
 execfile("rigid_bem2d.py")
 expCsv = np.genfromtxt('forces.csv', delimiter=',')
