@@ -1,56 +1,114 @@
-
 import numpy as np
-import scipy.special as scsp
-from IPython import embed
 import matplotlib as mpl
 mpl.rcParams.update(mpl.rcParamsDefault)
-import matplotlib.pyplot as plt
-# imaginary variable
-j=1.0j
+import scipy.special as scsp
 
+import matplotlib.pyplot as plt
+
+from theodorson import theodorson_function, Lift, generate_kinemtics
 
 def theo_fun(k):
-	'''Returns Theodorsen function at a reduced frequency k'''
+    '''Returns Theodorsen function at a reduced frequency k'''
 
-	H1=scsp.hankel2(1,k)
-	H0=scsp.hankel2(0,k)
+    H1=scsp.hankel2(1,k)
+    H0=scsp.hankel2(0,k)
 
-	C=H1/(H1+j*H0)
+    C=H1/(H1+1.j*H0)
 
-	return C
+    return C
 
-def theodorson_function(k):
-    '''
-    The Theodorson function C(K) is defined as:
-        F(K) = Re(C(K))
-        G(K) = Im(C(K))
-    '''
-    F = (0.5005*k**3 + 0.51261*k**2 + 0.21040*k + 0.021573)/ \
-        (k**3 + 1.03538*k**2 + 0.25124*k + 0.02151)
+def lift(k, circulatory=True):
+    # test generate_kinematics
+    a = -1/2 # quarter chord
+    c = 2 # chord
+    b = c * 0.5 # half chord
+    rho = 1.0
 
-    G = - (0.00015*k**3 + 0.12240*k**2 + 0.32721*k + 0.001990)/ \
-        (k**3 + 2.48148*k**2 + 0.93453*k + 0.08932)
-    return F, G
+    # define kinematics
+    omg = 1
+
+    # compute freestream velocity from reduced frequency
+    V = omg*b/k
+
+    alpha_max = np.deg2rad(5)
+    alpha_0 = np.deg2rad(5)
+    n_period = 2
+    t = np.linspace(0, n_period*2*np.pi/omg, 100)
+
+    # profile of the angle of attack
+    alpha = alpha_max * np.cos(omg*t) + alpha_0
+    alpha_dot = -alpha_max * omg * np.sin(omg*t)
+    alpha_dot_dot = -alpha_max * omg**2 * np.cos(omg*t)
+
+    alpha_complex = alpha_max*np.exp(1j*omg*t)+ alpha_0
+    alpha_dot = -alpha_max * omg * np.sin(omg*t)
+    alpha_dot_dot = -alpha_max * omg**2 * np.cos(omg*t)
+
+    difference_norm = np.linalg.norm(alpha-alpha_complex.real)
+    print('difference_norm', difference_norm)
+
+    # compute theodorsen function
+    H1=scsp.hankel2(1,k)
+    H0=scsp.hankel2(0,k)
+    C=H1/(H1+1.j*H0)
+    F = C.real
+    G = C.imag
+
+    if k > 1e1:
+        F = 0.5
+        G = 0
+    elif k == 1e-10:
+        F = 1
+        G = 0
+    C = F + 1j*G
+
+    # L_C = (2*np.pi*rho*V**2*b*(C) * alpha_max*np.exp(1j*omg*t)).real
+    L_C = (2*np.pi*rho*V**2*b*(C) * alpha_max*np.exp(1j*omg*t)).real
+    L_NC = (2*np.pi*rho*V**2*b*(1j*2*omg*b/V) * alpha_max*np.exp(1j*omg*t)).real
+    if circulatory==False:
+        L = L_C + L_NC
+    else:
+        L = L_C
+    Cl = (L/(rho*V**2*b)) + 2*np.pi*alpha_0
+    print('V', V)
+    # print('Cl', L_C/(rho*V**2*b))
+    return t, Cl, alpha, C
+
+
+# circulatory = False
+circulatory = True
+# plottings
+fig, ax = plt.subplots(1, 4, figsize=(60, 8))
+k_list = [1e-8, 0.1, 0.2, 1e8]
+for i in k_list:
+# for i in [0.1, 0.4, 0.7, 1]:
+    print(i)
+    t, Cl, alpha, _ = lift(k=i,circulatory=circulatory)
+    ax[0].plot(t, np.rad2deg(alpha.real), label=r'$\alpha$')
+
+    ax[1].plot(t, Cl, label=r'$C_l=$'+str(i))
+    ax[2].plot(np.rad2deg(alpha.real), Cl, label=r'$C_l $'+'circulatory = '+str(i))
 
 k = np.linspace(0.01, 4, 10000)
 C = theo_fun(k)
 # subplot the F and G and phase angles
-fig, ax = plt.subplots(2, 1)
-ax[0].plot(C.real, C.imag)
+ax[3].plot(k, np.rad2deg(np.angle(C)),label='circulatory angle')
+ax[3].plot(k, np.rad2deg(np.angle(1j*k/2)),label='non-circulatory angle')
+ax[3].plot(k, np.rad2deg(np.angle(C+1j*k/2)), label='total angle')
 
-# plot the F and G and phase angles
-ax[1].plot(k, np.rad2deg(np.angle(C)),label='circulatory angle')
-ax[1].plot(k, np.rad2deg(np.angle(1j*k/2)),label='non-circulatory angle')
-ax[1].plot(k, np.rad2deg(np.angle(C+1j*k/2)), label='total angle')
+ax[1].set_xlabel('t')
+ax[1].set_ylabel(r'$C_l$')
 ax[1].legend()
 
-fig.tight_layout()
+ax[2].set_xlabel(r'$\alpha$')
+ax[2].set_ylabel(r'$C_l$'+'  circulatory')
+ax[2].legend()
+ax[3].legend()
+
 ax[1].grid()
-fig.savefig('theodorsen_function.png', transparent=True, dpi=400)
+ax[2].grid()
+ax[3].grid()
+# plot cl vs alpha
+plt.savefig('pure_aoa.png',transparent=True, bbox_inches='tight', pad_inches=0.1, dpi=400)
 plt.show()
 
-F, G = theodorson_function(k)
-
-plt.plot(C.real, C.imag)
-plt.plot(F, G)
-plt.show()
