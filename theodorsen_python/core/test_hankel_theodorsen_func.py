@@ -32,9 +32,25 @@ def theodorson_function(k):
         (k**3 + 2.48148*k**2 + 0.93453*k + 0.08932)
     return F, G
 
-k = np.linspace(0.01, 100, 10000)
+k = np.linspace(0.01, 4, 10000)
 C = theo_fun(k)
+# subplot the F and G and phase angles
+fig, ax = plt.subplots(2, 1)
+ax[0].plot(C.real, C.imag)
+
+# plot the F and G and phase angles
+ax[1].plot(k, np.rad2deg(np.angle(C)),label='circulatory angle')
+ax[1].plot(k, np.rad2deg(np.angle(1j*k/2)),label='non-circulatory angle')
+ax[1].plot(k, np.rad2deg(np.angle(C+1j*k/2)), label='total angle')
+ax[1].legend()
+
+fig.tight_layout()
+ax[1].grid()
+fig.savefig('theodorsen_function.png', transparent=True, dpi=400)
+plt.show()
+
 F, G = theodorson_function(k)
+
 plt.plot(C.real, C.imag)
 plt.plot(F, G)
 plt.show()
