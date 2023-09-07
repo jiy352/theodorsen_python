@@ -79,6 +79,8 @@ def lift(k, circulatory=True):
     Cl = Cl_C + Cl_NC + Cl_0
     print('V', V)
     # print('Cl', L_C/(rho*V**2*b))
+    np.savetxt('theodorsen/alpha'+str(k)+'.txt', np.rad2deg(alpha))
+    np.savetxt('theodorsen/Cl'+str(k)+'.txt', Cl.real)
     return t, Cl, alpha,alpha_dot,alpha_dot_dot, C
 
 
