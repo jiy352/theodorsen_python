@@ -77,10 +77,12 @@ def lift(k, circulatory=True):
     Cl_C = 2 * np.pi * ((F*(1+1j*k)) + G*(1j - k)) * alpha_complex
     Cl_NC = np.pi * k * (1j - k/2) * alpha_complex 
     Cl = Cl_C + Cl_NC + Cl_0
+    L = Cl * rho * V**2 * b
     print('V', V)
     # print('Cl', L_C/(rho*V**2*b))
     np.savetxt('theodorsen/alpha'+str(k)+'.txt', np.rad2deg(alpha))
     np.savetxt('theodorsen/Cl'+str(k)+'.txt', Cl.real)
+    np.savetxt('theodorsen/L'+str(k)+'.txt', L.real)
     return t, Cl, alpha,alpha_dot,alpha_dot_dot, C
 
 
