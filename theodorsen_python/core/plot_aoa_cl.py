@@ -8,19 +8,28 @@ import matplotlib.pyplot as plt
 from theodorson import theodorson_function, Lift, generate_kinemtics
 
 alpha_file_name = 'theodorsen/alpha_1deg0.2.txt'
-alpha_file_name_vast = 'theodorsen/alpha_theodorsen00.2.txt'
+alpha_file_name = 'theodorsen/alpha_theodorsen00.2.txt'
+alpha_file_name_vast = 'theodorsen/nx31/alpha_theodorsen3.txt'
 # L_file_name = ['theodorsen/L_1deg0.2.txt',
 #                 'theodorsen/L_1deg0.6.txt',
 #                 'theodorsen/L_1deg1.txt',
 #                 'theodorsen/L_1deg3.txt']
+
 Cl_file_name = ['theodorsen/Cl_1deg0.2.txt',
                 'theodorsen/Cl_1deg0.6.txt',
                 'theodorsen/Cl_1deg1.txt',
                 'theodorsen/Cl_1deg3.txt']
-Cl_middle_file_name = ['theodorsen/C_L_theodorsen00.2.txt',
+
+Cl_file_name = ['theodorsen/C_L_theodorsen00.2.txt',
                        'theodorsen/C_L_theodorsen00.6.txt',
                        'theodorsen/C_L_theodorsen01.txt',
                        'theodorsen/C_L_theodorsen03.txt']
+
+Cl_middle_file_name = ['theodorsen/nx31/C_L_theodorsen0.2.txt',
+                       'theodorsen/nx31/C_L_theodorsen0.6.txt',
+                       'theodorsen/nx31/C_L_theodorsen1.txt',
+                       'theodorsen/nx31/C_L_theodorsen3.txt']
+
 def plot_cl(alpha_file_name, Cl_file_name, fig, ax, L_file_name=None):
 
 
@@ -43,15 +52,18 @@ def plot_cl(alpha_file_name, Cl_file_name, fig, ax, L_file_name=None):
         # ax[1].plot(alpha, Cl)
 
 if __name__ == '__main__':
-    fig, ax = plt.subplots(1, 1, figsize=(60/9, 8/3))
+    fig, ax = plt.subplots(1, 1, figsize=(30/3, 30/3))
     plot_cl(alpha_file_name, Cl_file_name, fig, ax,L_file_name=None)
     # plt.show()
     # fig, ax = plt.subplots(1, 1, figsize=(60/9, 8/3))
 
     plot_cl(alpha_file_name_vast, Cl_middle_file_name, fig, ax, L_file_name=None)
     plt.legend(['theodorsen 0.2', 'theodorsen 0.6', 'theodorsen 1', 'theodorsen 3','VAST 0.2', 'VAST 0.6', 'VAST 1', 'VAST 3'])
+    plt.legend(['nx=21 0.2', 'nx=21 0.6', 'nx=21 1', 'nx=21 3','nx=31 0.2', 'nx=31 0.6', 'nx=31 1', 'nx=31 3'])
     plt.xlabel(r'$\alpha$')
     plt.ylabel(r'$C_l$')
+    # plt.savefig('theodorsen/nx31/Cl_theodorsen.png',transparent=True, bbox_inches='tight', pad_inches=0.1, dpi=400)
+    plt.savefig('theodorsen/nx31/Cl_vast_con.png',transparent=True, bbox_inches='tight', pad_inches=0.1, dpi=400)
     plt.show()
 
 
